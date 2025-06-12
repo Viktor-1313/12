@@ -1,0 +1,3190 @@
+
+
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <!-- 🔥 ВАЖНО: Убедись, что здесь не фиксированная ширина -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>CyberTravelRussia</title>
+
+    <!-- Leaflet для карты -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"/> 
+
+    <style>
+        /* === Цветовые переменные === */
+        :root {
+            --logo-color: #000;
+            --logo-bg-color: #fff;
+            --logo-border-color: #000;
+            --logo-hover-color: #fff;
+            --logo-hover-bg-color: #000;
+            --logo-hover-border-color: #fff;
+            --primary-color: #00f2ff;
+            --secondary-color: #ff6ec7;
+            --bg-color: #0d0d0d;
+            --text-color: white;
+            --btn-hover: #00ccff;
+            --slogan-color: black;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: none;
+            left: 0;
+            top: 0;
+        }
+
+/* === Стиль для чекбоксов в квесте === */
+#taskCheckboxes input[type="checkbox"] {
+    margin-right: 1vw;
+}
+
+/* === Стиль для квестов в ЛК === */
+#userQuestsList li {
+    list-style: none;
+    margin-bottom: 1vw;
+}
+.screen.active {
+    z-index: 9999;
+    opacity: 1 !important;
+}
+        .screen.active {
+            display: block;
+        }
+
+        .frame-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .button {
+   position: absolute;
+            border: none;
+            background: linear-gradient(45deg, #00f2ff, #0066ff);
+            color: white;
+            font-size: 1vw;
+            padding: 1vw 2vw;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+            font-weight: bold;
+            box-shadow: 0 0.6vw 1.2vw rgba(0, 100, 200, 0.4);
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+            background: linear-gradient(45deg, #00ccff, #0044ff);
+            box-shadow: 0 0.8vw 1.6vw rgba(0, 120, 255, 0.6);
+        }
+
+        .logo {
+            position: absolute;
+            top: 2vw;
+            left: 2vw;
+            font-size: 1.7vw;
+            font-weight: bold;
+            color: var(--logo-color);
+            background-color: var(--logo-bg-color);
+            padding: 0.8vw 1.6vw;
+            border: 2px solid var(--logo-border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            z-index: 100;
+            animation: pulse 2s infinite;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        .logo:hover {
+            color: #fff;
+            background-color: #000;
+            border-color: #fff;
+            transform: scale(1.05);
+        }
+
+  /* === Основное меню === */
+.main-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: absolute;
+    top: 3.5vw;
+    left: 55%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4vw; /* Расстояние между пунктами меню */
+    flex-wrap: nowrap; /* ← ВАЖНО: элементы не переносятся */
+    justify-content: center;
+}
+
+.main-menu li {
+    position: relative; /* ← ВАЖНО для позиционирования подменю */
+    width: 10vw;
+    min-width: 120px;
+    height: 3vw;
+    min-height: 20px;
+}
+
+.main-menu a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    line-height: 4vw;
+    text-align: center;
+    background: linear-gradient(45deg, #00f2ff, #0066ff);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    box-shadow: 0 0.6vw 1.2vw rgba(0, 100, 200, 0.4);
+    transition: all 0.3s ease;
+}
+
+.main-menu a:hover {
+    background: linear-gradient(45deg, #00ccff, #0044ff);
+    transform: scale(1.05);
+}
+
+/* === Подменю === */
+.submenu {
+    position: absolute;
+    top: 3vw;             /* Отступ под пунктом меню */
+    left: 50%;            /* Центрируем подменю под пунктом */
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 1vw;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 1vw;
+    border-radius: 10px;
+    z-index: 9999;        /* Чтобы точно поверх всего */
+    opacity: 0;
+    pointer-events: none; /* Запрещаем взаимодействие, пока скрыто */
+    transform: translateY(-10px) translateX(-50%);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.main-menu li:hover .submenu {
+    opacity: 1;
+    pointer-events: auto; /* Разрешаем взаимодействие при открытии */
+    transform: translateY(0) translateX(-50%);
+}
+
+.submenu a {
+    display: block;
+    width: 100%;
+    height: 3vw;
+    line-height: 3vw;
+    text-align: center;
+    background-color: #00f2ff;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.submenu a:hover {
+    background-color: #00ccff;
+}
+
+        .slogan {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.8vw;
+            text-align: center;
+            max-width: 80vw;
+            color: var(--slogan-color);
+            animation: floatText 3s ease-in-out infinite;
+        }
+
+        @keyframes floatText {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(-50%, -60%) scale(1.05);
+                opacity: 0.9;
+            }
+        }
+
+        .avatar {
+            position: absolute;
+            width: 10vw;
+            height: 10vw;
+            border-radius: 50%;
+            border: 0.2vw solid var(--primary-color);
+            cursor: pointer;
+            animation: float 6s ease-in-out infinite, hoverEffect 3s ease-in-out infinite alternate;
+            z-index: 5;
+            transition: transform 3s ease, box-shadow 3s ease;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            50% { transform: translateX(2vw) translateY(-2vw); }
+        }
+
+        @keyframes hoverEffect {
+            from {
+                transform: scale(1);
+                box-shadow: 0 0 1vw rgba(0, 242, 255, 0.4);
+            }
+            to {
+                transform: scale(1.2);
+                box-shadow: 0 0 2vw rgba(0, 242, 255, 0.8);
+            }
+        }
+
+        .avatar:hover {
+            animation: float 3s ease-in-out infinite, hoverEffect 0.6s ease-in-out infinite alternate;
+            transform: scale(1.2);
+            box-shadow: 0 0 2vw rgba(0, 242, 255, 0.8);
+        }
+
+   .login-container {
+    position: absolute; /* ← важно для абсолютного позиционирования дочерних элементов */
+            top: 50vh;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150vw;
+            max-width: 230px;
+            padding: 5vw;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            min-height: 15vw; /* ← Новая высота */
+        }
+
+        .login-input {
+            width: 75%;
+            padding: 1.1vw;
+            margin-bottom: 2vw;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.55vw;
+            outline: none;
+        }
+
+
+
+
+        #map {
+            position: absolute;
+            top: 25vw;
+            left: 0;
+            width: 100%;
+            height: 50vh;
+        }
+
+        .stats-panel {
+            position: absolute;
+            top: 30vh;
+            left: 80vw;
+            width: 25vw;
+            max-width: 300px;
+            padding: 2vw;
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 12px;
+            box-shadow: 0 0 1vw rgba(0, 242, 255, 0.3);
+            font-size: 2vw;
+            z-index: 10;
+        }
+
+        .karma-exchange-container {
+            position: absolute;
+            top: 15vh;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3vw;
+            justify-content: center;
+            width: 90vw;
+        }
+
+        .karma-card {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 2vw;
+            border-radius: 12px;
+            width: 30vw;
+            min-width: 280px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 1.5vw rgba(0, 242, 255, 0.3);
+            color: white;
+        }
+
+        .karma-card:hover {
+            transform: scale(1.05);
+            background-color: rgba(0, 242, 255, 0.1);
+            box-shadow: 0 0 2vw rgba(0, 242, 255, 0.6);
+            color: black;
+        }
+
+        .karma-balance {
+            position: fixed;
+            bottom: 10vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 25vw;
+            max-width: 250px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 1vw;
+            font-size: 1.6vw;
+            text-align: center;
+            z-index: 1000;
+            border-radius: 12px;
+            box-shadow: 0 0.4vw 1.2vw rgba(0, 0, 0, 0.4);
+        }
+
+        @keyframes pop {
+            0%   { transform: scale(1); opacity: 1; }
+            50%  { transform: scale(1.2); color: #00ffea; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+/* === Стиль кастомного алерта === */
+.custom-alert {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.custom-alert-box {
+    background-color: #1a1a1a;
+    padding: 2vw;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 80%;
+    width: 300px;
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+}
+
+.custom-alert-box p {
+    color: white;
+    font-size: 1.4vw;
+    margin-bottom: 1.5vw;
+}
+
+.custom-alert-box button {
+    padding: 0.8vw 2vw;
+    font-size: 1.2vw;
+    background: linear-gradient(45deg, #00f2ff, #0066ff);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.custom-alert-box button:hover {
+    background: linear-gradient(45deg, #00ccff, #0044ff);
+}
+
+
+
+.value-card {
+    width: calc(32% - 2vw); /* ← чтобы поместилось 3 карточки с gap */
+    min-width: 280px; /* ← чтобы не схлопывались на маленьких экранах */
+    box-sizing: border-box; /* ← важно для правильного расчёта ширины */
+}
+
+
+
+
+/* === Анимация "печати" текста === */
+@keyframes typing {
+    from { width: 0 }
+    to { width: 80vw }
+}
+
+@keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: white }
+}
+
+/* === Анимация "выплывающих букв" === */
+.letter {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(30px) scale(0.8);
+    animation: popLetter 0.6s ease forwards;
+}
+
+@keyframes popLetter {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Последовательная задержка для каждой буквы */
+.letter:nth-child(1) { animation-delay: 0.1s; }
+.letter:nth-child(2) { animation-delay: 0.2s; }
+.letter:nth-child(3) { animation-delay: 0.3s; }
+.letter:nth-child(4) { animation-delay: 0.4s; }
+.letter:nth-child(5) { animation-delay: 0.5s; }
+.letter:nth-child(6) { animation-delay: 0.6s; }
+.letter:nth-child(7) { animation-delay: 0.7s; }
+.letter:nth-child(8) { animation-delay: 0.8s; }
+.letter:nth-child(9) { animation-delay: 0.9s; }
+.letter:nth-child(10) { animation-delay: 1.0s; }
+
+/* Плавное появление текста под заголовком */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+.value-card {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 1.5vw;
+    border-radius: 12px;
+    box-shadow: 0 0 1vw rgba(0, 242, 255, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    min-height: 5vw;
+    color: white;
+}
+
+.value-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 2vw rgba(0, 242, 255, 0.6);
+}
+
+/* === Анимация появления карточек === */
+.card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.8s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Задержка между карточками */
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+.card:nth-child(4) { animation-delay: 0.4s; }
+
+/* === Классы для карточек === */
+.tour-card,
+.nft-card,
+.profile-card,
+.application-form {
+    @extend .card;
+
+/* Уменьшаем внутренние отступы */
+    padding: 1vw 2vw;
+
+    /* Ограничиваем высоту */
+    min-height: 6vw; /* ← можно сделать меньше, если нужно */
+    height: auto;
+
+    /* Если есть текст — регулируем размер шрифта */
+    font-size: 0.9vw;
+}
+
+/* Если используется fadeInDown */
+.tour-card,
+.nft-card,
+.profile-card,
+.application-form {
+padding: 1vw 2vw;
+    animation: fadeInDown 0.6s ease-out forwards;
+}
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-40px); }
+    to { opacity: 1; transform: translateY(0); }
+
+
+.partner-card {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 1vw;
+    border-radius: 12px;
+    box-shadow: 0 0 1vw rgba(0, 242, 255, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.partner-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 2vw rgba(0, 242, 255, 0.6);
+}
+
+
+.region-card {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.8s ease-out forwards;
+}
+.region-card:nth-child(1) { animation-delay: 0.1s; }
+.region-card:nth-child(2) { animation-delay: 0.2s; }
+.region-card:nth-child(3) { animation-delay: 0.3s; }
+.region-card:nth-child(4) { animation-delay: 0.4s; }
+.region-card:nth-child(5) { animation-delay: 0.5s; }
+.region-card:nth-child(6) { animation-delay: 0.6s; }
+
+
+/* === Анимация появления карточек === */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.vr-tour-card {
+    opacity: 0;
+    animation: fadeInDown 0.6s ease-out forwards;
+}
+
+.vr-tour-card:nth-child(1) { animation-delay: 0.1s; }
+.vr-tour-card:nth-child(2) { animation-delay: 0.2s; }
+.vr-tour-card:nth-child(3) { animation-delay: 0.3s; }
+.vr-tour-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* === Кнопка VR-экскурсии с эффектом свечения === */
+.button.vr-button {
+    box-shadow: 0 0 2vw #00f2ff;
+    animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 0 1vw #00f2ff;
+    }
+    to {
+        box-shadow: 0 0 4vw #00ccff;
+    }
+}
+
+/* === Анимация появления карточек === */
+.card {
+    opacity: 0;
+    transform: translateY(40px);
+    animation: fadeInDown 0.6s ease-out forwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+.card:nth-child(4) { animation-delay: 0.4s; }
+.card:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === Анимация появления карточек === */
+.card {
+    opacity: 0;
+    transform: translateY(40px);
+    animation: fadeInDown 0.6s ease-out forwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+.card:nth-child(4) { animation-delay: 0.4s; }
+.card:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === Анимация появления карточек === */
+.guardian-card {
+    opacity: 0;
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+.guardian-card:nth-child(1) { animation-delay: 0.1s; }
+.guardian-card:nth-child(2) { animation-delay: 0.2s; }
+.guardian-card:nth-child(3) { animation-delay: 0.3s; }
+.guardian-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* === Подсветка при наведении === */
+.guardian-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 2vw rgba(0, 242, 255, 0.6);
+}
+
+// === Данные о квестах === //
+    const questData = {
+        yakutHero: {
+            title: "Спасение Якутского духа",
+            content: "Вы отправляетесь в Ысыах, чтобы вернуть Хаппаху силы.\n\n• Соберите ритуальные предметы\n• Пройдите испытание холода\n• Верните имя духу",
+            karmaReward: 50
+        },
+        buryatAmulet: {
+            title: "Поиск священного амулета",
+            content: "Станьте частью древнего ритуала и найдите потерянный шаманский амулет.\n\n• Исследуйте святилище\n• Пройдите обряд очищения\n• Получите благословление",
+            karmaReward: 75
+        },
+        caucasusHero: {
+            title: "Герой Кавказа",
+            content: "Путешествие по тропе предков.\n\n• Примите гостеприимство\n• Узнайте легенду о предке\n• Освободите заложника",
+            karmaReward: 100
+        }
+    };
+
+    // === Показываем информацию о квесте === //
+    function showQuestDetails(quest) {
+        const data = questData[quest];
+        if (!data) return;
+
+        document.getElementById("questTitle").textContent = data.title;
+        document.getElementById("questContent").innerHTML = data.content.replace(/\n/g, '<br>');
+        document.getElementById("questPopup").style.display = "flex";
+    }
+
+    // === Закрываем окно квеста === //
+    function closeQuestPopup() {
+        document.getElementById("questPopup").style.display = "none";
+    }
+
+    // === Функция показа экранов === //
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+        const target = document.getElementById('screen' + id);
+        if (target) {
+            target.classList.add('active');
+        }
+    }
+
+        /* === Медиазапросы для маленьких экранов === */
+        @media (max-width: 1200px) {
+            .main-menu {
+                gap: 4vw;
+                top: 10vw;
+            }
+
+            .main-menu a {
+                font-size: 2vw;
+                line-height: normal;
+                padding: 1vw 0;
+            }
+
+            .logo {
+                font-size: 2.4vw;
+                padding: 0.8vw 1.6vw;
+            }
+
+            .button {
+                font-size: 1.8vw;
+                padding: 1vw 1.5vw;
+            }
+
+            .login-container {
+                width: 90vw;
+                padding: 4vw;
+            }
+
+            .login-input {
+                font-size: 2vw;
+            }
+
+            .stats-panel {
+                left: 70vw;
+                top: 25vh;
+            }
+
+            .karma-card {
+                width: 40vw;
+                font-size: 1.8vw;
+            }
+
+            .karma-balance {
+                font-size: 1.6vw;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-menu {
+                flex-direction: column;
+                align-items: center;
+                gap: 2vw;
+            }
+
+            .main-menu a {
+                font-size: 3vw;
+                line-height: normal;
+                height: auto;
+                padding: 1vw 0;
+            }
+
+            .logo {
+                font-size: 4vw;
+                padding: 1vw 2vw;
+            }
+
+            .button {
+                width: 90vw;
+                margin-left: 5vw;
+                font-size: 2.5vw;
+                padding: 1.5vw 3vw;
+            }
+
+            .login-container {
+                top: 45vh;
+                width: 90vw;
+                padding: 5vw;
+            }
+
+            .login-input {
+                font-size: 2.5vw;
+            }
+
+            .stats-panel {
+                left: 50%;
+                transform: translateX(-50%);
+                top: 70vh;
+            }
+
+            .karma-card {
+                width: 80vw;
+                font-size: 2.5vw;
+            }
+
+            .karma-balance {
+                font-size: 2vw;
+            }
+        }
+
+}
+    </style>
+</head>
+<body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Экраны сайта -->
+<div id="screen0" class="screen active">
+    <div class="frame-wrapper">
+        <img src="images/1.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(1)">CyberTravelRussia</div>
+        <div class="slogan" style="top: 7vw;">Welcome to Cyber Russia! Добро пожаловать в Кибер Россию!</div>
+        <div class="slogan" style="top: 45vw;">Путешествуй, делай добрые дела и повышай уровень Кармы!</div>
+        <div id="map"></div>
+        <img src="images/avatar1.png" class="avatar" style="top: 35vw; left: 6vw;" />
+        <img id="face" src="images/face.png" class="avatar" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<div id="screen1" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/2.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+        <nav>
+            <ul class="main-menu">
+                <li><a href="#" class="dropdown-toggle">О нас (About)</a>
+                    <ul class="submenu">
+                        <li><a href="#" onclick="showScreen(7)">Наша история</a></li> <!-- Новый пункт -->
+                        <li><a href="#" onclick="showScreen(8)">Наша миссия</a></li>
+                        <li><a href="#" onclick="showScreen(9)">Ценности</a></li>
+                        <li><a href="#" onclick="showScreen(10)">Партнеры</a></li>
+                        <li><a href="#" onclick="showScreen(11)">Контакты</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">Услуги (Services)</a>
+                    <ul class="submenu">
+                        <li><a href="#" onclick="showScreen(12)">Туры в регионы</a></li>
+                        <li><a href="#" onclick="showScreen(6)">Бронирование</a></li>
+                        <li><a href="#" onclick="showScreen(13)">Экскурсии</a></li>
+                        <li><a href="#" onclick="showScreen(14)">Мероприятия</a></li>
+                        <li><a href="#">Фотосессии</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">Регионы России</a>
+                    <ul class="submenu">
+                        <li><a href="#" onclick="showScreen(15)">Описание региона</a></li>
+                        <li><a href="#" onclick="showScreen(16)">Фото мест</a></li>
+                        <li><a href="#" onclick="showScreen(17)">Видео мест</a></li>
+                        <li><a href="#  onclick="showScreen(18)">Народы</a></li>
+                        <li><a href="#" onclick="showScreen(19)">Хранители традиций</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">Активности</a>
+                    <ul class="submenu">
+                        <li><a href="#" onclick="showScreen(20)">Квесты героев</a></li>
+                        <li><a href="#">Обучение</a></li>
+                        <li><a href="#">Физкультура</a></li>
+                        <li><a href="#">Зов добра</a></li>
+                        <li><a href="#">NFT маркет</a></li>
+                        <li><a href="#">Этнофиджитал</a></li>
+                        <li><a href="#">Сообщества</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <button class="button" style="top: 60vh; left: 6vw; width: 10vw; height: 7vw; font-size: 1vw;"onclick="showScreen(3)">Вход / Регистрация</button>
+        <button class="button" style="top: 80vh; left: 60vw; width: 15vw; height: 4vw; font-size: 1vw;"onclick="showScreen(6)">Забронировать тур</button>
+    </div>
+</div>
+
+
+
+
+
+
+<!-- === Экран 2: Личный кабинет === -->
+<div id="screen2" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/3.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+
+        <!-- Меню личного кабинета -->
+        <nav style="position: absolute; top: 8vh; left: 50%; transform: translateX(-50%);">
+            <ul class="main-menu">
+                <li>
+                    <a href="#" class="dropdown-toggle">Аватар пользователя</a>
+                    <ul class="submenu">
+                        <li><a href="#">Мой аватар</a></li>
+                        <li><a href="#">Изменить внешность</a></li>
+                        <li><a href="#">Снаряжение</a></li>
+                        <li><a href="#">Друзья</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-toggle">Путешествия</a>
+                    <ul class="submenu">
+                        <li><a href="#">История поездок</a></li>
+                        <li><a href="#">Карта мест</a></li>
+                        <li><a href="#">Выполненные квесты</a></li>
+                        <li><a href="#">Избранные места</a></li>
+                        <li><a href="#">Скидки за активность</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-toggle">NFT пользователя</a>
+                    <ul class="submenu">
+                        <li><a href="#">Мои NFT</a></li>
+                        <li><a href="#">Награды</a></li>
+                        <li><a href="#">Артефакты</a></li>
+                        <li><a href="#">Коллекции</a></li>
+                        <li><a href="#">Подключить кошелёк</a></li>
+                        <li><a href="#">NFT маркетплейс</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-toggle">Активности</a>
+                    <ul class="submenu">
+                        <li><a href="#">Текущие задания</a></li>
+                        <li><a href="#">Завершённые квесты</a></li>
+                        <li><a href="#">Статистика</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Кнопки навигации -->
+        <button class="button" style="top: 70vh; left: 4vw;" onclick="showScreen(1)">На главную</button>
+        <button class="button" style="top: 80vh; left: 4vw;" onclick="showScreen(4)">Обмен бонусов Karma</button>
+        <button class="button" style="top: 70vh; right: 4vw;" onclick="navigateTo('upgrade-avatar')">Прокачать аватара</button>
+        <button class="button" style="top: 80vh; right: 4vw;" onclick="navigateTo('earn-karma')">Заработать Karma</button>
+
+        <!-- Аватар пользователя в 3D -->
+        <iframe 
+            id="user-avatar"
+            src="https://models.readyplayer.me/683c9c580fd7e4abfdbd6640"      
+            width="40vw" 
+            height="50vh" 
+            frameborder="0" 
+            allowfullscreen
+            style="position: absolute; top: 30vh; left: 50%; transform: translateX(-50%); border-radius: 12px;">
+        </iframe>
+
+        <!-- Панель характеристик -->
+        <div class="stats-panel" style="left: 85vw;">
+            <h3>Статистика</h3>
+            <ul>
+                <li><span class="stat-label">Имя:</span> <span class="stat-value">Василий Иванов</span></li>
+                <li><span class="stat-label">Сила:</span> <span class="stat-value">75%</span></li>
+                <li><span class="stat-label">Здоровье:</span> <span class="stat-value">80%</span></li>
+                <li><span class="stat-label">Мудрость:</span> <span class="stat-value">65%</span></li>
+                <li><span class="stat-label">Добродетель:</span> <span class="stat-value">70%</span></li>
+            </ul>
+        </div>
+
+        <!-- Информация о пользователе -->
+        <div style="
+            position: absolute;
+            top: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80vw;
+            max-width: 1000px;
+            padding: 3vw;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+            font-size: 1.6vw;
+            color: white;
+            line-height: 2.5vw;
+        " id="profileQuests">
+            <h3 style="color: #00f2ff;">Ваши квесты:</h3>
+            <div id="userQuestsList"></div>
+        </div>
+
+        <!-- Показ текущего количества Karma -->
+        <div style="
+            position: absolute;
+            top: 10vh;
+            right: 5vw;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 1vw 2vw;
+            border-radius: 12px;
+            font-size: 1.4vw;
+            color: #00f2ff;
+            font-weight: bold;
+        " id="karmaCount">Karma: 0</div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<!-- === Экран 3: Вход / Регистрация === -->
+<div id="screen3" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/4.png" alt="Фоновое изображение"/>
+
+        <!-- Логотип -->
+        <div class="logo" onclick="showScreen(1)">CyberTravelRussia</div>
+
+                <!-- Форма входа -->
+        <div class="login-container">
+            <h2 style="color: white; text-align: center;">Вход / Регистрация</h2>
+            <input type="tel" id="phone" class="login-input" placeholder="Введите номер телефона" maxlength="11">
+
+            <button class="button" 
+        style="margin-top: 8vh; width: 47.5%; padding: 0.8vw 1vw; font-size: 0.5vw;" 
+        onclick="sendCode()">
+    Отправить код по SMS
+</button>
+
+            <input type="text" id="code" class="login-input" placeholder="Код из SMS" maxlength="4" disabled oninput="checkCodeInput()">
+
+            <button id="loginButton" class="button" style="margin-top: 6vh; width: 47.5%; display: none;" onclick="loginUser()">Войти</button>
+
+            <div style="margin-top: 4vh; font-size: 0.7vw; color: #00f2ff; cursor: pointer; text-align: center;" onclick="showScreen(5)">
+                Регистрация
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+<!-- === Экран 4: трата кармы === -->
+<div id="screen4" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/5.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(2)">CyberTravelRussia</div>
+        <h2 style="position: absolute; top: 8vw; left: 50%; transform: translateX(-50%); color: white; font-size: 3.6vw;">
+            Обмен бонусов Karma
+        </h2>
+        <div class="karma-balance" id="karma-count">Баланс: 500 K</div>
+        <div class="karma-exchange-container">
+            <div class="karma-card" onclick="redeemOffer('Скидка 10%', 50)">
+                <h3>Скидка 10%</h3>
+                <p>На все туры по России</p>
+                <p class="cost">Стоимость: 50 Karma</p>
+            </div>
+            <div class="karma-card" onclick="redeemOffer('Скидка 20%', 100)">
+                <h3>Скидка 20%</h3>
+                <p>На проживание в отелях</p>
+                <p class="cost">Стоимость: 100 Karma</p>
+            </div>
+        </div>
+        <button class="button" style="top: 30vh; left: 10vw;" onclick="showScreen(2)">Назад</button>
+    </div>
+</div>
+
+
+
+
+
+<!-- === Экран 5: Регистрация === -->
+
+<div id="screen5" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/6.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(3)">CyberTravelRussia</div>
+       <div class="login-container">
+    <form style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+        <h2 style="color: white; text-align: center;">Регистрация</h2>
+        <input type="text" id="regName" class="login-input" placeholder="Имя" />
+        <input type="email" id="regEmail" class="login-input" placeholder="Email" />
+        <input type="tel" id="regPhone" class="login-input" placeholder="Телефон (10 цифр)" maxlength="10" />
+        <input type="password" id="regPassword" class="login-input" placeholder="Придумайте пароль" />
+        <input type="password" id="confirmPassword" class="login-input" placeholder="Подтвердите пароль" />
+        <label style="color: #ccc; font-size: 0.7vw; margin-top: 1vw;">
+            <input type="checkbox" id="agreeTerms" /> Я принимаю условия соглашения
+        </label>
+        <button class="button"
+        type="button"
+        style="margin-top: 30vw; width: 80%; padding: 1vw; font-size: 0.7vw;"
+        onclick="registerUser()">
+    Зарегистрироваться
+</button>
+    </form>
+</div>
+<!-- === Кастомное модальное окно === -->
+<div id="customAlert" class="custom-alert">
+    <div class="custom-alert-box">
+        <p id="customAlertMessage">Сообщение</p>
+        <button onclick="closeCustomAlert()">ОК</button>
+    </div>
+</div>
+
+</div>
+
+
+<!-- === Экран 6: Бронирование туров === -->
+<div id="screen6" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/7.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(1)">CyberTravelRussia</div>
+
+        <!-- Заголовок раздела -->
+        <h2 style="position: absolute; top: 8vh; left: 50%; transform: translateX(-50%); color: white; font-size: 3.6vw;">
+            Бронирование туров
+        </h2>
+
+        <!-- Поле поиска и фильтры -->
+        <div style="position: absolute; top: 15vh; left: 50%; transform: translateX(-50%); width: 90vw; max-width: 1200px; background-color: rgba(0, 0, 0, 0.7); padding: 4vw; border-radius: 12px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 2vw; justify-content: space-between;">
+                <input type="text" placeholder="Поиск по названию..." style="width: 30vw; padding: 2vw; border-radius: 8px; border: none; font-size: 1.6vw;" />
+                <select style="width: 30vw; padding: 2vw; border-radius: 8px; border: none; font-size: 1.6vw;">
+                    <option value="">Любая локация</option>
+                    <option value="moscow">Москва</option>
+                    <option value="spb">Санкт-Петербург</option>
+                    <option value="ural">Урал</option>
+                    <option value="siberia">Сибирь</option>
+                </select>
+                <select style="width: 30vw; padding: 2vw; border-radius: 8px; border: none; font-size: 1.6vw;">
+                    <option value="">Любая длительность</option>
+                    <option value="short">До 3 дней</option>
+                    <option value="medium">3–7 дней</option>
+                    <option value="long">Больше недели</option>
+                </select>
+                <select style="width: 30vw; padding: 2vw; border-radius: 8px; border: none; font-size: 1.6vw;">
+                    <option value="">Любая стоимость</option>
+                    <option value="low">До 10 000 ₽</option>
+                    <option value="mid">10 000 – 50 000 ₽</option>
+                    <option value="high">Более 50 000 ₽</option>
+                </select>
+            </div>
+
+            <!-- Кнопки выбора действия -->
+            <div style="margin-top: 4vw; display: flex; flex-direction: column; align-items: center; gap: 2vw;">
+                <button class="button" style="width: 80vw; max-width: 500px; font-size: 2vw;" onclick="showTourList()">
+                    Выбрать и забронировать
+                </button>
+                <button class="button" style="width: 80vw; max-width: 500px; font-size: 2vw;" onclick="showApplicationForm()">
+                    Оставить заявку на тур
+                </button>
+            </div>
+        </div>
+
+        <!-- Список предложений туров (скрыт по умолчанию) -->
+        <div id="tourList" style="position: absolute; top: 40vh; left: 50%; transform: translateX(-50%); width: 90vw; display: none; flex-wrap: wrap; gap: 3vw; justify-content: center;">
+            <!-- Пример карточки тура -->
+            <div style="background-color: rgba(0, 0, 0, 0.7); padding: 2vw; border-radius: 12px; width: 30vw; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">
+                <h3 style="color: #00f2ff;">Тур по Москве</h3>
+                <p style="color: #ccc;">Изучите исторические места столицы за 5 дней</p>
+                <p style="color: white;"><strong>Стоимость:</strong> 25 000 ₽</p>
+                <button class="button" style="width: 100%; margin-top: 2vw;" onclick="bookTour('Тур по Москве')">
+                    Забронировать
+                </button>
+            </div>
+
+            <div style="background-color: rgba(0, 0, 0, 0.7); padding: 2vw; border-radius: 12px; width: 30vw; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">
+                <h3 style="color: #00f2ff;">Путешествие в Сибирь</h3>
+                <p style="color: #ccc;">Приключение в дикой природе и национальные традиции</p>
+                <p style="color: white;"><strong>Стоимость:</strong> 60 000 ₽</p>
+                <button class="button" style="width: 100%; margin-top: 2vw;" onclick="bookTour('Путешествие в Сибирь')">
+                    Забронировать
+                </button>
+            </div>
+        </div>
+
+        <!-- Форма заявки на тур (скрыта по умолчанию) -->
+        <div id="applicationForm" style="position: absolute; top: 40vh; left: 50%; transform: translateX(-50%); width: 90vw; max-width: 600px; background-color: rgba(0, 0, 0, 0.7); padding: 4vw; border-radius: 12px; display: none;">
+            <h3 style="color: #00f2ff; text-align: center;">Оставить заявку на тур</h3>
+            <input type="text" id="appName" class="login-input" placeholder="Ваше имя" />
+            <input type="email" id="appEmail" class="login-input" placeholder="Email" />
+            <input type="tel" id="appPhone" class="login-input" placeholder="Телефон" />
+            <textarea id="appComment" rows="4" class="login-input" placeholder="Комментарий"></textarea>
+            <button class="button" style="width: 100%; margin-top: 4vw;" onclick="submitApplication()">
+                Отправить заявку
+            </button>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- === Экран 7: Наша история === -->
+<div id="screen7" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/8.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+
+        <!-- Заголовок с эффектом печати -->
+        <h2 style="position: absolute; top: 10vh; left: 50%; transform: translateX(-50%); color: black; font-size: 2.6vw; text-align: center;">
+            Как всё начиналось...
+        </h2>
+
+        <!-- Блок с текстом, который будет "печататься" -->
+        <div id="historyText" style="
+            position: absolute;
+            top: 25vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80vw;
+            max-width: 1600px;
+            font-size: 1vw;
+            line-height: 1vw;
+            color:  white;
+            text-align: justify;
+            white-space: pre-wrap;
+            overflow: hidden;
+            border-right: 2px solid white;
+            animation: typing 4s steps(40, end), blink-caret 0.75s step-end infinite;
+        ">
+        </div>
+
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            На главную
+        </button>
+
+<!-- Аудио -->
+        <audio id="historyAudio" loop>
+            <source src="audio/history-music.mp3" type="audio/mpeg">
+            Ваш браузер не поддерживает аудио.
+        </audio>
+
+    </div>
+</div>
+
+
+
+<!-- === Экран 8: Наша миссия === -->
+<div id="screen8" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/9.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+
+        <!-- Заголовок с эффектом "выплывающие буквы" -->
+        <h2 style="position: absolute; top: 10vh; left: 50%; transform: translateX(-50%); font-size: 3.6vw; color: black; text-align: center;">
+            <span class="letter">Н</span>
+            <span class="letter">а</span>
+            <span class="letter">ш</span>
+            <span class="letter">а</span>
+            <span class="letter">&nbsp;</span>
+            <span class="letter">м</span>
+            <span class="letter">и</span>
+            <span class="letter">с</span>
+            <span class="letter">с</span>
+            <span class="letter">и</span>
+            <span class="letter">я</span>
+        </h2>
+
+        <!-- Текст миссии -->
+        <div id="missionText" style="
+            position: absolute;
+            top: 25vh;
+            left: 60%;
+            transform: translateX(-50%);
+            width: 80vw;
+            max-width: 900px;
+            font-size: 1.6vw;
+            line-height: 2.5vw;
+            color: white;
+            text-align: justify;
+            opacity: 0;
+            animation: fadeInUp 2s ease-out forwards;
+            animation-delay: 3s;
+        ">
+            Наша миссия — объединить технологии и культуру, чтобы каждый мог погрузиться в богатство традиций народов России без границ и ограничений.
+            Мы верим, что через VR, карты, туры и этно-истории можно сделать мир ближе, язык предков живым, а путешествие — настоящим опытом души.
+        </div>
+<!-- Кнопка выхода -->
+        
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            На главную
+
+    </div>
+</div>
+
+
+
+
+<!-- === Экран 9: Наши ценности === -->
+<div id="screen9" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/10.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(1)">CyberTravelRussia</div>
+
+        <!-- Заголовок с эффектом печати -->
+        <h2 style="position: absolute; top: 8vh; left: 50%; transform: translateX(-50%); color: #00f2ff; font-size: 3.6vw; text-align: center;">
+           
+
+<<div style="
+    position: absolute;
+    top: 20vh;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50vw;
+    max-width: 1000px;
+    min-height: 6vw;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 3vw;
+    z-index: 10;
+    min-height: 40vw;
+">
+
+    <!-- Культура -->
+    <div class="value-card card">
+        <h3 style="color: #00f2ff; font-size: 1vw;">Культура</h3>
+        <p style="color: white; font-size: 0.5vw;">
+            Мы сохраняем и популяризируем культуру народов России, делая её доступной каждому.
+        </p>
+    </div>
+
+    <!-- Традиции -->
+    <div class="value-card card">
+        <h3 style="color: #00f2ff; font-size: 1vw;">Традиции</h3>
+        <p style="color: white; font-size: 0.5vw;">
+            Уважаем прошлое и передаём древние знания новым поколениям через технологии.
+        </p>
+    </div>
+
+    <!-- Инновации -->
+    <div class="value-card card">
+        <h3 style="color: #00f2ff; font-size: 1vw;">Инновации</h3>
+        <p style="color: white; font-size: 0.5vw;">
+            Соединяем VR, карты и цифровые туры, чтобы сделать путешествия максимально реалистичными.
+        </p>
+    </div>
+
+    <!-- Этика -->
+    <div class="value-card card">
+        <h3 style="color: #00f2ff; font-size: 1vw;">Этика</h3>
+        <p style="color: white; font-size: 0.5vw;">
+            Мы строим платформу, где уважают людей, их историю и культурное разнообразие.
+        </p>
+    </div>
+
+    <!-- Доступность -->
+    <div class="value-card card">
+        <h3 style="color: #00f2ff; font-size: 1vw;">Доступность</h3>
+        <p style="color: white; font-size: 0.5vw;">
+            Туры должны быть доступны всем — независимо от места жительства и возможностей.
+        </p>
+    </div>
+
+    <!-- Сообщество -->
+    <div class="value-card card">
+        <h3 style="color: #00f2ff; font-size: 1vw;">Сообщество</h3>
+        <p style="color: white; font-size: 0.5vw;">
+            Мы создаём сообщество единомышленников, объединённых любовью к своей стране и истории.
+        </p>
+    </div>
+
+</div>
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            На главную
+    </div>
+</div>
+
+
+
+<!-- === Экран 10: Партнеры === -->
+<div id="screen10" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/11.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(1)">CyberTravelRussia</div>
+
+        <!-- Заголовок с эффектом печати (если хочешь) -->
+        <h2 style="
+            position: absolute;
+            top: 5vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00f2ff;
+            font-size: 3.6vw;
+            text-align: center;
+        ">
+            Наши партнёры
+        </h2>
+
+        <!-- Контейнер карточек партнёров -->
+        <div style="
+            position: absolute;
+            top: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 1000px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 2vw;
+            z-index: 10;
+            min-height: 40vw;
+        " id="partnersContainer">
+            <!-- Пример карточки партнера -->
+            <div class="partner-card card" style="width: calc(32% - 2vw);">
+                <img src="images/partner1.png" alt="Логотип партнера" style="width: 60%; height: auto; border-radius: 8px;">
+                <h3 style="color: #00f2ff; font-size: 1vw; margin-top: 1vw;">СибирьТур</h3>
+                <p style="color: white; font-size: 1vw;">Специализируемся на турах по Сибири и Дальнему Востоку.</p>
+            </div>
+
+            <div class="partner-card card" style="width: calc(32% - 2vw);">
+                <img src="images/partner2.png" alt="Логотип партнера" style="width: 60%; height: auto; border-radius: 8px;">
+                <h3 style="color: #00f2ff; font-size: 1vw; margin-top: 1vw;">Культура России</h3>
+                <p style="color: white; font-size: 1vw;">Организация этнографических экспедиций и культурных обменов.</p>
+            </div>
+
+            <div class="partner-card card" style="width: calc(32% - 2vw);">
+                <img src="images/partner3.png" alt="Логотип партнера" style="width: 60%; height: auto; border-radius: 8px;">
+                <h3 style="color: #00f2ff; font-size: 1vw; margin-top: 1vw;">VR Journey</h3>
+                <p style="color: white; font-size: 1vw;">Создаём VR-туры по историческим местам России.</p>
+            </div>
+
+            <div class="partner-card card" style="width: calc(32% - 2vw);">
+                <img src="images/partner4.png" alt="Логотип партнера" style="width: 60%; height: auto; border-radius: 8px;">
+                <h3 style="color: #00f2ff; font-size: 1vw; margin-top: 1vw;">Народы России</h3>
+                <p style="color: white; font-size: 1vw;">Поддержка сохранения языков и традиций малых народов.</p>
+            </div>
+
+            <div class="partner-card card" style="width: calc(32% - 2vw);">
+                <img src="images/partner5.png" alt="Логотип партнера" style="width: 60%; height: auto; border-radius: 8px;">
+                <h3 style="color: #00f2ff; font-size: 1vw; margin-top: 1vw;">ЭтноТелеком</h3>
+                <p style="color: white; font-size: 1vw;">Развиваем цифровое наследие коренных народов.</p>
+            </div>
+
+            <div class="partner-card card" style="width: calc(32% - 2vw);">
+                <img src="images/partner6.png" alt="Логотип партнера" style="width: 60%; height: auto; border-radius: 8px;">
+                <h3 style="color: #00f2ff; font-size: 1vw; margin-top: 1vw;">Karma Foundation</h3>
+                <p style="color: white; font-size: 1vw;">Поддерживаем социальные инициативы через NFT и K-баллы.</p>
+            </div>
+        </div>
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            На главную
+    </div>
+</div>
+
+
+<!-- === Экран 11: Контакты === -->
+<div id="screen11" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/11.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+
+        <!-- Заголовок -->
+        <h2 style="position: absolute; top: 5vh; left: 50%; transform: translateX(-50%); color: #00f2ff; font-size: 3.6vw; text-align: center;">
+            Свяжитесь с нами
+        </h2>
+
+        <!-- Блок контактов -->
+        <div style="position: absolute; top: 20vh; left: 50%; transform: translateX(-50%); width: 100vw; max-width: 900px; background-color: rgba(0, 0, 0, 0.7); padding: 2vw; border-radius: 12px; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">
+            
+            <p style="color: white; font-size: 1vw; margin-bottom: 2vw;"><strong>Адрес:</strong> г. Москва, ул. Киберпанковская, д. 1</p>
+            <p style="color: white; font-size: 1vw; margin-bottom: 2vw;"><strong>Телефон:</strong> +7 (123) 456-78-90</p>
+            <p style="color: white; font-size: 1vw; margin-bottom: 2vw;"><strong>Email:</strong> support@cybertravelrussia.ru</p>
+            <p style="color: white; font-size: 1vw; margin-bottom: 2vw;"><strong>Соцсети:</strong></p>
+            <div style="display: flex; justify-content: center; gap: 3vw; margin-bottom: 4vw;">
+                <a href="#" style="color: #00f2ff; font-size: 1vw;">Telegram</a>
+                <a href="#" style="color: #00f2ff; font-size: 1vw;">Instagram</a>
+                <a href="#" style="color: #00f2ff; font-size: 1vw;">VK</a>
+                <a href="#" style="color: #00f2ff; font-size: 1vw;">YouTube</a>
+            </div>
+
+            <!-- Форма обратной связи -->
+            <div style="margin-top: 1vw; display: flex; flex-direction: column; gap: 1vw;">
+                <input type="text" placeholder="Ваше имя" style="width: 60%; padding: 1vw; font-size: 0.7vw; border-radius: 8px; border: none;" />
+                <input type="email" placeholder="Email" style="width: 60%; padding: 1vw; font-size: 0.7vw; border-radius: 8px; border: none;" />
+                <textarea rows="4" placeholder="Ваше сообщение" style="width: 60%; padding: 1vw; font-size: 0.7vw; border-radius: 8px; border: none;"></textarea>
+                <button class="button" style="width: 60%; font-size: 0.7vw;" onclick="sendMessage()">
+                    Отправить
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            На главную
+    </div>
+</div>
+
+
+
+<!-- === Экран 12: Туры в регионы === -->
+<div id="screen12" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/12.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(1)">CyberTravelRussia</div>
+
+        <!-- Заголовок -->
+        <h2 style="position: absolute; top: 5vh; left: 50%; transform: translateX(-50%); color: #00f2ff; font-size: 3.6vw; text-align: center;">
+            Туры в регионы России
+        </h2>
+
+        <!-- Блок с регионами -->
+        <div style="position: absolute; top: 20vh; left: 50%; transform: translateX(-50%); width: 90vw; max-width: 1400px; display: flex; flex-wrap: wrap; gap: 2vw; justify-content: center;">
+            
+            <!-- Карточка региона: Москва -->
+            <div class="region-card" style="background-color: rgba(0, 0, 0, 0.7); padding: 1vw; border-radius: 12px; width: 20vw; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">
+                <h3 style="color: #00f2ff;">Москва</h3>
+                <p style="color: #ccc; font-size: 0.8vw;">Сердце России — история, архитектура, музеи и современные технологии.</p>
+                <button class="button" style="width: 20%; margin-top: 1vw;" onclick="selectRegion('moscow')">
+                    Подробнее
+                </button>
+            </div>
+
+            <!-- Карточка региона: Сибирь -->
+            <div class="region-card" style="background-color: rgba(0, 0, 0, 0.7); padding: 1vw; border-radius: 12px; width: 20vw; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">
+                <h3 style="color: #00f2ff;">Сибирь</h3>
+                <p style="color: #ccc; font-size: 0.8vw;">Дикая природа, загадочные традиции и древние культуры.</p>
+                <button class="button" style="width: 20%; margin-top: 1vw;" onclick="selectRegion('siberia')">
+                    Подробнее
+                </button>
+            </div>
+
+            <!-- Карточка региона: Урал -->
+            <div class="region-card" style="background-color: rgba(0, 0, 0, 0.7); padding: 1vw; border-radius: 12px; width: 20vw; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">
+                <h3 style="color: #00f2ff;">Урал</h3>
+                <p style="color: #ccc; font-size: 0.8vw;">Горы, шахты, ремёсла и уникальные этнические традиции.</p>
+                <button class="button" style="width: 20%; margin-top: 1vw;" onclick="selectRegion('ural')">
+                    Подробнее
+                </button>
+            </div>
+
+            <!-- Карточка региона: Дальний Восток -->
+            <div class="region-card" style="background-color: rgba(0, 0, 0, 0.7); padding: 1vw; border-radius: 12px; width: 20vw; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">
+                <h3 style="color: #00f2ff;">Дальний Восток</h3>
+                <p style="color: #ccc; font-size: 0.8vw;">Камчатка, Сахалин, народы Амура и морская романтика.</p>
+                <button class="button" style="width: 20%; margin-top: 1vw;" onclick="selectRegion('far-east')">
+                    Подробнее
+                </button>
+            </div>
+
+            <!-- Карточка региона: Кавказ -->
+            <div class="region-card" style="background-color: rgba(0, 0, 0, 0.7); padding: 1vw; border-radius: 12px; width: 20vw; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">
+                <h3 style="color: #00f2ff;">Кавказ</h3>
+                <p style="color: #ccc; font-size: 0.8vw;">Горы, чай, фестивали и гостеприимство народов Северного Кавказа.</p>
+                <button class="button" style="width: 20%; margin-top: 1vw;" onclick="selectRegion('caucasus')">
+                    Подробнее
+                </button>
+            </div>
+
+            <!-- Карточка региона: Якутия -->
+            <div class="region-card" style="background-color: rgba(0, 0, 0, 0.7); padding: 1vw; border-radius: 12px; width: 20vw; box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);">
+                <h3 style="color: #00f2ff;">Якутия</h3>
+                <p style="color: #ccc; font-size: 0.8vw;">Ледяные пещеры, вечная мерзлота и культура якутов.</p>
+               <button class="button" style="width: 20%; margin-top: 1vw;" onclick="selectRegion('yakutia')">
+                    Подробнее
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            На главную
+    </div>
+</div>
+
+<!-- === Экран 13: Виртуальные экскурсии === -->
+<div id="screen13" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/13.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+
+        <!-- Заголовок -->
+        <h2 style="
+            position: absolute;
+            top: 8vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00f2ff;
+            font-size: 3.6vw;
+            text-align: center;
+            animation: fadeInDown 0.6s ease-out;
+        ">
+            Погрузитесь в историю через VR
+        </h2>
+
+        <!-- Карта регионов (простая имитация) -->
+        <div style="
+            position: absolute;
+            top: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 1200px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3vw;
+            justify-content: center;
+        " id="vrToursContainer">
+            
+            <!-- Пример VR-карты регионов -->
+            <div class="vr-tour-card" style="
+                width: 30vw;
+                background-color: rgba(0, 0, 0, 0.7);
+                border-left: 4px solid #00f2ff;
+                padding: 2vw;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            " onclick="startVRExperience('moscow')">
+                <h3 style="color: white;">Москва</h3>
+                <p style="font-size: 1.4vw; color: #ccc;">Древние улочки Кремля и история столицы</p>
+            </div>
+
+            <div class="vr-tour-card" style="
+                width: 30vw;
+                background-color: rgba(0, 0, 0, 0.7);
+                border-left: 4px solid #00f2ff;
+                padding: 2vw;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            " onclick="startVRExperience('yakutia')">
+                <h3 style="color: white;">Якутия</h3>
+                <p style="font-size: 1.4vw; color: #ccc;">Ледяные пещеры и культура якутов</p>
+            </div>
+
+            <div class="vr-tour-card" style="
+                width: 30vw;
+                background-color: rgba(0, 0, 0, 0.7);
+                border-left: 4px solid #00f2ff;
+                padding: 2vw;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            " onclick="startVRExperience('ural')">
+                <h3 style="color: white;">Урал</h3>
+                <p style="font-size: 1.4vw; color: #ccc;">Городские легенды и ремёсла Урала</p>
+            </div>
+
+            <div class="vr-tour-card" style="
+                width: 30vw;
+                background-color: rgba(0, 0, 0, 0.7);
+                border-left: 4px solid #00f2ff;
+                padding: 2vw;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            " onclick="startVRExperience('caucasus')">
+                <h3 style="color: white;">Кавказ</h3>
+                <p style="font-size: 1.4vw; color: #ccc;">Горы, традиции, гостеприимство</p>
+            </div>
+        </div>
+
+        <!-- Кнопка начала VR-экскурсии -->
+        <button class="button"
+                style="position: absolute; bottom: 10vh; left: 50%; transform: translateX(-50%); width: 30vw;"
+                onclick="launchVR()">
+            Начать VR-экскурсию
+        </button>
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            На главную
+    </div>
+</div>
+
+
+<!-- === Экран 14: Мероприятия === -->
+<div id="screen14" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/15.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+
+        <!-- Заголовок -->
+        <h2 style="
+            position: absolute;
+            top: 8vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00f2ff;
+            font-size: 3.6vw;
+            text-align: center;
+            animation: fadeInDown 0.6s ease-out;
+        ">
+            Культурные мероприятия России
+        </h2>
+
+        <!-- Блок с карточками мероприятий -->
+        <div style="
+            position: absolute;
+            top: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 1200px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3vw;
+            justify-content: center;
+            z-index: 10;
+        " id="eventsContainer">
+
+            <!-- Карточка 1: Якутский Ысыах -->
+            <div class="event-card card" style="
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 2vw;
+                border-radius: 12px;
+                width: 30vw;
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            " onclick="showEventDetails('ysyakh')">
+                <img src="images/event-ysyakh.jpg" alt="Ысыах" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Ысыах (Якутия)</h3>
+                <p style="font-size: 1.4vw; color: white;">Праздник встречи лета с традиционными напитками, песнями и танцами.</p>
+            </div>
+
+            <!-- Карточка 2: Удмуртская свадьба -->
+            <div class="event-card card" style="
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 2vw;
+                border-radius: 12px;
+                width: 30vw;
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            " onclick="showEventDetails('udmurt-wedding')">
+                <img src="images/event-udmurt.jpg" alt="Удмуртская свадьба" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Удмуртская свадьба</h3>
+                <p style="font-size: 1.4vw; color: white;">Обряды, пляски и ритуалы — всё как было испокон века.</p>
+            </div>
+
+            <!-- Карточка 3: Кавказские свадьбы -->
+            <div class="event-card card" style="
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 2vw;
+                border-radius: 12px;
+                width: 30vw;
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            " onclick="showEventDetails('caucasus-wedding')">
+                <img src="images/event-caucasus.jpg" alt="Кавказская свадьба" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Кавказская свадьба</h3>
+                <p style="font-size: 1.4vw; color: white;">Горы, тосты, танцы и гостеприимство на высшем уровне.</p>
+            </div>
+
+            <!-- Карточка 4: Бурятский Сурхарбан -->
+            <div class="event-card card" style="
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 2vw;
+                border-radius: 12px;
+                width: 30vw;
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            " onclick="showEventDetails('surkharban')">
+                <img src="images/event-buryat.jpg" alt="Сурхарбан" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Сурхарбан (Бурятия)</h3>
+                <p style="font-size: 1.4vw; color: white;">Ритуал поминовения предков с конной игрой и национальными блюдами.</p>
+            </div>
+
+            <!-- Карточка 5: Новый год по якутскому календарю -->
+            <div class::after
+                transition: transform 0.3s ease;
+            " onclick="showEventDetails('yakut-new-year')">
+                <img src="images/event-yakut-newyear.jpg" alt="Якутский Новый год" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Ыабылан (Якутия)</h3>
+                <p style="font-size: 1.4vw; color: white;">Новогодние обряды, масленичные куклы и ритуалы удачи.</p>
+            </div>
+
+        </div>
+
+        <!-- Кнопка выхода -->
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            На главную
+        </button>
+    </div>
+</div>
+
+
+<!-- === Экран 15: Описание региона === -->
+<div id="screen15" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/16.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+
+        <!-- Заголовок -->
+        <h2 style="
+            position: absolute;
+            top: 8vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00f2ff;
+            font-size: 3.6vw;
+            text-align: center;
+        ">
+            Выберите регион
+        </h2>
+
+        <!-- Контейнер карточек регионов -->
+        <div style="
+            position: absolute;
+            top: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 1400px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3vw;
+            justify-content: center;
+            z-index: 10;
+        " id="regionCardsContainer">
+
+            <!-- Карточка: Москва -->
+            <div class="region-card" onclick="showRegionPopup('moscow')">
+                <h3 style="color: #00f2ff;">Москва</h3>
+                <p style="font-size: 1.4vw; color: white;">Сердце России — история, архитектура, музеи и технологии.</p>
+            </div>
+
+            <!-- Карточка: Якутия -->
+            <div class="region-card" onclick="showRegionPopup('yakutia')">
+                <h3 style="color: #00f2ff;">Якутия</h3>
+                <p style="font-size: 1.4vw; color: white;">Ледяные пещеры, вечная мерзлота и культура якутов.</p>
+            </div>
+
+            <!-- Карточка: Сибирь -->
+            <div class="region-card" onclick="showRegionPopup('siberia')">
+                <h3 style="color: #00f2ff;">Сибирь</h3>
+                <p style="font-size: 1.4vw; color: white;">Дикая природа и древние обряды шаманов.</p>
+            </div>
+
+            <!-- Карточка: Урал -->
+            <div class="region-card" onclick="showRegionPopup('ural')">
+                <h3 style="color: #00f2ff;">Урал</h3>
+                <p style="font-size: 1.4vw; color: white;">Горы, шахты и ремёсла — уникальные традиции.</p>
+            </div>
+
+            <!-- Карточка: Кавказ -->
+            <div class="region-card" onclick="showRegionPopup('caucasus')">
+                <h3 style="color: #00f2ff;">Кавказ</h3>
+                <p style="font-size: 1.4vw; color: white;">Гостеприимство, горы и фестивали.</p>
+            </div>
+        </div>
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            На главную
+        </button>
+    </div>
+</div>
+
+<!-- === Модальное окно с информацией о регионе === -->
+<div id="regionPopup" class="custom-alert" style="display: none;">
+    <div class="custom-alert-box">
+        <h3 id="popupTitle" style="color: #00f2ff;"></h3>
+        <p id="popupContent" style="color: white; font-size: 1.4vw;"></p>
+        <button onclick="closeRegionPopup()" class="button" style="width: 100%;">Закрыть</button>
+    </div>
+</div>
+
+<!-- === Экран 16: Фото мест === -->
+<div id="screen16" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/17.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(1)">CyberTravelRussia</div>
+
+        <!-- Заголовок -->
+        <h2 style="
+            position: absolute;
+            top: 8vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00f2ff;
+            font-size: 3.6vw;
+            text-align: center;
+        ">
+            Галерея: Фото мест России
+        </h2>
+
+        <!-- Контейнер с фотографиями -->
+        <div style="
+            position: absolute;
+            top: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 1400px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3vw;
+            justify-content: center;
+            z-index: 10;
+        " id="photosContainer">
+
+            <!-- Примеры фото (заменить src на свои) -->
+            <div class="photo-card" style="
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 1vw;
+                border-radius: 12px;
+                width: calc(30% - 2vw);
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                transition: transform 0.3s ease;
+                cursor: pointer;
+            " onclick="showPhotoDetails('photo1')">
+                <img src="images/photo1.jpg" alt="Фото места" style="width: 100%; border-radius: 8px;">
+                <p style="font-size: 1.4vw; margin-top: 1vw; color: white;">Описание к фото 1</p>
+            </div>
+
+            <div class="photo-card" style="
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 1vw;
+                border-radius: 12px;
+                width: calc(30% - 2vw);
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                transition: transform 0.3s ease;
+                cursor: pointer;
+            " onclick="showPhotoDetails('photo2')">
+                <img src="images/photo2.jpg" alt="Фото места" style="width: 100%; border-radius: 8px;">
+                <p style="font-size: 1.4vw; margin-top: 1vw; color: white;">Описание к фото 2</p>
+            </div>
+
+            <div class="photo-card" style="
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 1vw;
+                border-radius: 12px;
+                width: calc(30% - 2vw);
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                transition: transform 0.3s ease;
+                cursor: pointer;
+            " onclick="showPhotoDetails('photo3')">
+                <img src="images/photo3.jpg" alt="Фото места" style="width: 100%; border-radius: 8px;">
+                <p style="font-size: 1.4vw; margin-top: 1vw; color: white;">Описание к фото 3</p>
+            </div>
+
+            <div class="photo-card" style="
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 1vw;
+                border-radius: 12px;
+                width: calc(30% - 2vw);
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                transition: transform 0.3s ease;
+                cursor: pointer;
+            " onclick="showPhotoDetails('photo4')">
+                <img src="images/photo4.jpg" alt="Фото места" style="width: 100%; border-radius: 8px;">
+                <p style="font-size: 1.4vw; margin-top: 1vw; color: white;">Описание к фото 4</p>
+            </div>
+
+            <div class="photo-card" style="
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 1vw;
+                border-radius: 12px;
+                width: calc(30% - 2vw);
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                transition: transform 0.3s ease;
+                cursor: pointer;
+            " onclick="showPhotoDetails('photo5')">
+                <img src="images/photo5.jpg" alt="Фото места" style="width: 100%; border-radius: 8px;">
+                <p style="font-size: 1.4vw; margin-top: 1vw; color: white;">Описание к фото 5</p>
+            </div>
+
+            <div class="photo-card" style="
+                background-color: rgba(0, 0, 0, 0.7);
+                padding: 1vw;
+                border-radius: 12px;
+                width: calc(30% - 2vw);
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                transition: transform 0.3s ease;
+                cursor: pointer;
+            " onclick="showPhotoDetails('photo6')">
+                <img src="images/photo6.jpg" alt="Фото места" style="width: 100%; border-radius: 8px;">
+                <p style="font-size: 1.4vw; margin-top: 1vw; color: white;">Описание к фото 6</p>
+            </div>
+
+        </div>
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            На главную
+        </button>
+    </div>
+</div>
+
+<!-- === Экран 17: Видео мест === -->
+<div id="screen17" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/18.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+
+        <!-- Заголовок -->
+        <h2 style="
+            position: absolute;
+            top: 8vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #0d0d0d;
+            font-size: 3.6vw;
+            text-align: center;
+        ">
+            Видео мест России
+        </h2>
+
+        <!-- Контейнер с видео -->
+        <div style="
+            position: absolute;
+            top: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 1200px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3vw;
+            justify-content: center;
+            z-index: 10;
+        " id="videoContainer">
+
+            <!-- Видео 1: Москва -->
+            <div class="video-card card" style="
+                width: calc(40% - 2vw);
+                background-color: rgba(0, 0, 0, 0.7);
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+            ">
+                <iframe width="100%" height="300"
+                        src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0"
+                        title="Москва"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+                <p style="color: white; font-size: 1.4vw; padding: 1vw;">Кремль и Красная площадь</p>
+            </div>
+
+            <!-- Видео 2: Якутия -->
+            <div class="video-card card" style="
+                width: calc(40% - 2vw);
+                background-color: rgba(0, 0, 0, 0.7);
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+            ">
+                <iframe width="100%" height="300"
+                        src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0"
+                        title="Якутия"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+                <p style="color: white; font-size: 1.4vw; padding: 1vw;">Ледяные пещеры и Ысыах</p>
+            </div>
+
+            <!-- Видео 3: Сибирь -->
+            <div class="video-card card" style="
+                width: calc(40% - 2vw);
+                background-color: rgba(0, 0, 0, 0.7);
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+            ">
+                <iframe width="100%" height="300"
+                        src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0"
+                        title="Сибирь"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+                <p style="color: white; font-size: 1.4vw; padding: 1vw;">Байкал зимой и шаманы</p>
+            </div>
+
+            <!-- Видео 4: Урал -->
+            <div class="video-card card" style="
+                width: calc(40% - 2vw);
+                background-color: rgba(0, 0, 0, 0.7);
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+            ">
+                <iframe width="100%" height="300"
+                        src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0"
+                        title="Урал"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+                <p style="color: white; font-size: 1.4vw; padding: 1vw;">Горы Урала и ремёсла</p>
+            </div>
+
+            <!-- Видео 5: Кавказ -->
+            <div class="video-card card" style="
+                width: calc(40% - 2vw);
+                background-color: rgba(0, 0, 0, 0.7);
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+            ">
+                <iframe width="100%" height="300"
+                        src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0"
+                        title="Кавказ"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+                <p style="color: white; font-size: 1.4vw; padding: 1vw;">Чечня, Ингушетия, Дагестан</p>
+            </div>
+
+        </div>
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            Назад к регионам
+        </button>
+    </div>
+</div>
+
+
+
+<!-- === Экран 18: Народы России (Простая версия) === -->
+<div id="screen18" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/19.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+
+        <!-- Заголовок -->
+        <h2 style="
+            position: absolute;
+            top: 8vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00f2ff;
+            font-size: 3.6vw;
+            text-align: center;
+        ">
+            Народы России
+        </h2>
+
+        <!-- Контейнер карточек -->
+        <div style="
+            position: absolute;
+            top: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 1400px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3vw;
+            justify-content: center;
+        " id="peopleContainer">
+
+            <!-- Карточка: Якуты -->
+            <div class="people-card"
+                 onclick="showPeopleInfo('yakut')"
+                 style="
+                    background-color: rgba(0, 0, 0, 0.7);
+                    padding: 2vw;
+                    border-radius: 12px;
+                    width: 30vw;
+                    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                    cursor: pointer;
+                    transition: transform 0.3s ease;
+                ">
+                <h3 style="color: #00f2ff;">Якуты</h3>
+                <p style="font-size: 1.4vw; color: white;">Культура вечной мерзлоты и древние традиции.</p>
+            </div>
+
+            <!-- Карточка: Чеченцы -->
+            <div class="people-card"
+                 onclick="showPeopleInfo('chechen')"
+                 style="
+                    background-color: rgba(0, 0, 0, 0.7);
+                    padding: 2vw;
+                    border-radius: 12px;
+                    width: 30vw;
+                    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                    cursor: pointer;
+                    transition: transform 0.3s ease;
+                ">
+                <h3 style="color: #00f2ff;">Чеченцы</h3>
+                <p style="font-size: 1.4vw; color: white;">Горы, гостеприимство и адаты.</p>
+            </div>
+
+            <!-- Карточка: Удмурты -->
+            <div class="people-card"
+                 onclick="showPeopleInfo('udmurt')"
+                 style="
+                    background-color: rgba(0, 0, 0, 0.7);
+                    padding: 2vw;
+                    border-radius: 12px;
+                    width: 30vw;
+                    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                    cursor: pointer;
+                    transition: transform 0.3s ease;
+                ">
+                <h3 style="color: #00f2ff;">Удмурты</h3>
+                <p style="font-size: 1.4vw; color: white;">Древние символы, язык и мифология.</p>
+            </div>
+
+        </div>
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            На главную
+        </button>
+    </div>
+</div>
+
+<!-- === Всплывающее окно с информацией о народе === -->
+<div id="peoplePopup" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    flex-direction: column;
+">
+    <div style="
+        background-color: #1a1a1a;
+        padding: 4vw;
+        border-radius: 10px;
+        text-align: center;
+        color: white;
+        width: 80vw;
+        max-width: 600px;
+    ">
+        <h3 id="popupTitle" style="color: #00f2ff;"></h3>
+        <p id="popupContent"></p>
+        <button class="button" onclick="closePeoplePopup()" style="margin-top: 2vw; width: 100%;">Закрыть</button>
+    </div>
+</div>
+
+<!-- === Экран 19: Хранители традиций === -->
+<div id="screen19" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/20.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+
+        <!-- Заголовок -->
+        <h2 style="
+            position: absolute;
+            top: 8vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00f2ff;
+            font-size: 3.6vw;
+            text-align: center;
+        ">
+            Хранители традиций
+        </h2>
+
+        <!-- Контейнер карточек -->
+        <div style="
+            position: absolute;
+            top: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 1400px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3vw;
+            justify-content: center;
+            z-index: 10;
+        " id="guardianContainer">
+
+            <!-- Карточка 1: Мария Петрова (Якутский язык) -->
+            <div class="guardian-card"
+                 onclick="showGuardianInfo('petrova')"
+                 style="
+                    background-color: rgba(0, 0, 0, 0.7);
+                    padding: 2vw;
+                    border-radius: 12px;
+                    width: 30vw;
+                    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                    cursor: pointer;
+                    transition: transform 0.3s ease;
+                ">
+                <img src="images/guardian1.jpg" alt="Мария Петрова" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Мария Петрова</h3>
+                <p style="font-size: 1.4vw; color: white;">Сохраняет якутские предания и обучает молодёжь языку.</p>
+            </div>
+
+            <!-- Карточка 2: Батор Улан-Удэ (Шаман) -->
+            <div class="guardian-card"
+                 onclick="showGuardianInfo('bator')"
+                 style="
+                    background-color: rgba(0, 0, 0, 0.7);
+                    padding: 2vw;
+                    border-radius: 12px;
+                    width: 30vw;
+                    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                    cursor: pointer;
+                    transition: transform 0.3s ease;
+                ">
+                <img src="images/guardian2.jpg" alt="Батор Цыренов" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Батор Цыренов</h3>
+                <p style="font-size: 1.4vw; color: white;">Шаман и хранитель бурятских обрядов.</p>
+            </div>
+
+            <!-- Карточка 3: Айша Ахматова (Чечня) -->
+            <div class="guardian-card"
+                 onclick="showGuardianInfo('aysha')"
+                 style="
+                    background-color: rgba(0, 0, 0, 0.7);
+                    padding: 2vw;
+                    border-radius: 12px;
+                    width: 30vw;
+                    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                    cursor: pointer;
+                    transition: transform 0.3s ease;
+                ">
+                <img src="images/guardian3.jpg" alt="Айша Ахматова" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Айша Ахматова</h3>
+                <p style="font-size: 1.4vw; color: white;">Певица и рассказчица чеченских легенд.</p>
+            </div>
+
+            <!-- Карточка 4: Иван Табаков (Удмурты) -->
+            <div class="guardian-card"
+                 onclick="showGuardianInfo('ivan')"
+                 style="
+                    background-color: rgba(0, 0, 0, 0.7);
+                    padding: 2vw;
+                    border-radius: 12px;
+                    width: 30vw;
+                    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                    cursor: pointer;
+                    transition: transform 0.3s ease;
+                ">
+                <img src="images/guardian4.jpg" alt="Иван Табаков" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Иван Табаков</h3>
+                <p style="font-size: 1.4vw; color: white;">Знает древние ритуалы удмуртов и проводит обряды.</p>
+            </div>
+
+        </div>
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(1)">
+            Назад к регионам
+        </button>
+    </div>
+</div>
+
+<!-- === Всплывающее окно с информацией о хранителе === -->
+<div id="guardianPopup" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    flex-direction: column;
+">
+    <div style="
+        background-color: #1a1a1a;
+        padding: 4vw;
+        border-radius: 10px;
+        text-align: center;
+        color: white;
+        width: 80vw;
+        max-width: 600px;
+    ">
+        <h3 id="guardianTitle" style="color: #00f2ff;"></h3>
+        <p id="guardianContent"></p>
+        <button class="button" onclick="closeGuardianPopup()" style="margin-top: 2vw; width: 100%;">Закрыть</button>
+    </div>
+</div>
+
+
+
+<!-- === Экран 20: Квесты героев === -->
+<div id="screen20" class="screen">
+    <div class="frame-wrapper">
+        <img src="images/21.png" alt="Фоновое изображение"/>
+        <div class="logo" onclick="showScreen(0)">CyberTravelRussia</div>
+
+        <!-- Заголовок -->
+        <h2 style="
+            position: absolute;
+            top: 8vh;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00f2ff;
+            font-size: 3.6vw;
+            text-align: center;
+        ">
+            Квесты героев России
+        </h2>
+
+        <!-- Контейнер квестов -->
+        <div style="
+            position: absolute;
+            top: 20vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90vw;
+            max-width: 1400px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3vw;
+            justify-content: center;
+            z-index: 10;
+        " id="questContainer">
+
+            <!-- Квест 1: Спасение Якутского духа -->
+            <div class="quest-card card"
+                 onclick="showQuestDetails('yakutHero')"
+                 style="
+                    background-color: rgba(0, 0, 0, 0.7);
+                    padding: 2vw;
+                    border-radius: 12px;
+                    width: 30vw;
+                    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                    cursor: pointer;
+                    transition: transform 0.3s ease;
+                ">
+                <img src="images/quest-yakut.jpg" alt="Якутский квест" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Спасение Якутского духа</h3>
+                <p style="font-size: 1.4vw; color: white;">Помогите Хаппаху вернуть силы в Ысыах.</p>
+            </div>
+
+            <!-- Квест 2: Поиск священного амулета -->
+            <div class="quest-card card"
+                 onclick="showQuestDetails('buryatAmulet')"
+                 style="
+                    background-color: rgba(0, 0, 0, 0.7);
+                    padding: 2vw;
+                    border-radius: 12px;
+                    width: 30vw;
+                    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                    cursor: pointer;
+                    transition: transform 0.3s ease;
+                ">
+                <img src="images/quest-buryat.jpg" alt="Бурятский квест" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Поиск священного амулета</h3>
+                <p style="font-size: 1.4vw; color: white;">Отправьтесь в горы Бурятии, чтобы найти амулет мудрости.</p>
+            </div>
+
+            <!-- Квест 3: Герой Кавказа -->
+            <div class="quest-card card"
+                 onclick="showQuestDetails('caucasusHero')"
+                 style="
+                    background-color: rgba(0, 0, 0, 0.7);
+                    padding: 2vw;
+                    border-radius: 12px;
+                    width: 30vw;
+                    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+                    cursor: pointer;
+                    transition: transform 0.3s ease;
+                ">
+                <img src="images/quest-caucasus.jpg" alt="Кавказский квест" style="width: 100%; border-radius: 8px;">
+                <h3 style="color: #00f2ff; margin-top: 1vw;">Герой Кавказа</h3>
+                <p style="font-size: 1.4vw; color: white;">Пройдите путь чеченского героя через горы и традиции.</p>
+            </div>
+
+        </div>
+
+        <!-- Кнопка выхода -->
+        <button class="button"
+                style="position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); width: 15vw;"
+                onclick="showScreen(0)">
+            На главную
+        </button>
+
+
+<!-- === Модальное окно квеста === -->
+<div id="questPopup" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    flex-direction: column;
+">
+    <div style="
+        background-color: #1a1a1a;
+        padding: 4vw;
+        border-radius: 10px;
+        text-align: center;
+        color: white;
+        width: 80vw;
+        max-width: 600px;
+    ">
+        <h3 id="questTitle" style="color: #00f2ff;"></h3>
+        <p id="questContent"></p>
+
+        <!-- Отображение награды за квест -->
+        <p id="questKarmaReward" style="margin-top: 2vw; font-size: 1.4vw; color: #00ccff;"></p>
+
+        <!-- Кнопки -->
+        <div style="display: flex; justify-content: space-between; margin-top: 2vw;">
+            <button class="button" onclick="takeQuest()">Взять квест</button>
+            <button class="button" onclick="closeQuestPopup()">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<script>
+    // Проверяем, что DOM загружен
+    document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOM загружен");
+    });
+</script>
+
+
+<script>
+
+
+
+    function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+    const target = document.getElementById('screen' + id);
+    if (target) {
+        target.classList.add('active');
+ 
+  // При входе на экран 2 — обновляем баланс
+        if (id === 2) {
+            renderUserQuests();
+            updateKarmaDisplay();
+        }
+
+// Автоматически открываем модальное окно
+        if (id === 19) {
+            showQuestDetails('petrova'); // можно заменить 'petrova' на любой другой ключ
+        }
+
+
+
+        // Если это экран 20 — открываем модальное окно квеста
+        if (id === 20) {
+            showQuestDetails('yakutHero'); // или любой другой квест
+        }
+        // Если это screen8 — запускаем анимацию букв
+        if (id === 8) {
+            const letters = document.querySelectorAll('#screen8 .letter');
+            letters.forEach((letter, index) => {
+                letter.style.animationDelay = `${index * 0.1}s`;
+                letter.style.opacity = 0;
+                setTimeout(() => {
+                    letter.style.opacity = 1;
+                }, index * 100);
+            });
+        }
+    }
+}
+
+// Проверь, чтобы функция showScreen была одна и работает корректно
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+    const target = document.getElementById('screen' + id);
+    if (target) {
+        target.classList.add('active');
+    }
+}
+
+
+    function sendCode() {
+        const phone = document.getElementById('phone').value;
+        if (phone.length !== 11 || !/^\d+$/.test(phone)) {
+            alert("Введите корректный телефон");
+            return;
+        }
+        alert("Код отправлен на " + phone);
+        document.getElementById('code').disabled = false;
+        document.getElementById('code').focus();
+    }
+
+    function checkCodeInput() {
+        const code = document.getElementById('code').value;
+        const loginBtn = document.getElementById('loginButton');
+        if (code.length === 4 && /^\d+$/.test(code)) {
+            loginBtn.style.display = 'block';
+        } else {
+            loginBtn.style.display = 'none';
+        }
+    }
+
+    function loginUser() {
+        alert("Вы вошли!");
+        showScreen(2);
+    }
+
+    function navigateTo(section) {
+        alert("Переход в раздел: " + section);
+    }
+
+    function changeAvatar() {
+        alert("Переход к изменению аватара");
+    }
+
+    function redeemOffer(title, cost) {
+        alert("Вы выбрали: " + title);
+    }
+
+ function registerUser(event) {
+    // Если это событие формы — предотвращаем стандартную отправку
+    if (event && event.preventDefault) event.preventDefault();
+
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const agree = document.getElementById('agreeTerms').checked;
+
+    if (!name || !email || !phone || !password || !confirmPassword) {
+        showCustomAlert("Заполните все поля");
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        showCustomAlert("Пароли не совпадают");
+        return;
+    }
+
+    if (!agree) {
+        showCustomAlert("Примите соглашение");
+        return;
+    }
+
+    localStorage.setItem('user', JSON.stringify({ name, email, phone }));
+    showCustomAlert("Вы зарегистрировались!");
+
+    setTimeout(() => {
+        closeCustomAlert();
+        showScreen(2);
+    }, 1000);
+}
+
+
+// === Отображение квестов в личном кабинете === //
+function renderUserQuests() {
+    const container = document.getElementById("userQuestsList");
+    if (!container) return;
+
+    const user = JSON.parse(localStorage.getItem("user")) || { quests: [], karma: 0 };
+
+    container.innerHTML = ""; // Очищаем старое содержимое
+
+    if (user.quests.length === 0) {
+        container.innerHTML = "<p>У вас нет активных квестов.</p>";
+        return;
+    }
+
+    user.quests.forEach(quest => {
+        const div = document.createElement("div");
+        div.style.marginTop = "2vw";
+        div.style.padding = "2vw";
+        div.style.background = "rgba(0, 0, 0, 0.5)";
+        div.style.borderRadius = "8px";
+
+        div.innerHTML = `
+            <h4 style="color: #00f2ff;">${quest.name}</h4>
+            <p style="font-size: 1.4vw;">Награда: ${questData[quest.name]?.karmaReward ?? 0} Karma</p>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+
+// === Данные о квестах с Karma === //
+const questData = {
+    yakutHero: {
+        title: "Спасение Якутского духа",
+        content: "Вы отправляетесь в Ысыах, чтобы вернуть Хаппаху силы.\n\n• Соберите ритуальные амулеты\n• Пройдите испытание холода\n• Верните имя духу",
+        karmaReward: 50
+    },
+    buryatAmulet: {
+        title: "Поиск священного амулета",
+        content: "Станьте частью древнего ритуала и найдите потерянный шаманский амулет.\n\n• Исследуйте святилище\n• Пройдите обряд очищения\n• Получите благословление",
+        karmaReward: 75
+    },
+    caucasusHero: {
+        title: "Герой Кавказа",
+        content: "Путешествие по тропе предков.\n\n• Примите гостеприимство\n• Узнайте легенду о предке\n• Освободите заложника",
+        karmaReward: 100
+    }
+};
+
+// === Текущий открытый квест === //
+let currentQuest = null;
+
+// === Функция показа информации о квесте === //
+function showQuestDetails(quest) {
+    const data = questData[quest];
+    if (!data) return;
+
+    // Обновляем контент
+    document.getElementById("questTitle").textContent = data.title;
+    document.getElementById("questContent").innerHTML = data.content.replace(/\n/g, '<br>');
+    document.getElementById("questKarmaReward").innerHTML = `Награда: ${data.karmaReward} Karma`;
+
+    // Сохраняем текущий квест
+    currentQuest = quest;
+
+    // Открываем окно
+    document.getElementById("questPopup").style.display = "flex";
+}
+
+// === Функция закрытия квеста === //
+function closeQuestPopup() {
+    document.getElementById("questPopup").style.display = "none";
+    currentQuest = null;
+}
+
+// === Функция взятия квеста === //
+function takeQuest() {
+    if (!currentQuest) return;
+
+    const user = JSON.parse(localStorage.getItem('user')) || { quests: [], karma: 0 };
+    const questToAdd = questData[currentQuest];
+
+    // Проверка: не взят ли уже квест
+    const alreadyTaken = user.quests.find(q => q.name === currentQuest);
+
+    if (alreadyTaken) {
+        alert("Этот квест уже у вас есть.");
+        return;
+    }
+
+    // Добавляем квест в список пользователя
+    user.quests.push({
+        name: currentQuest,
+        completed: false
+    });
+
+    localStorage.setItem('user', JSON.stringify(user));
+    alert(`Квест "${questToAdd.title}" добавлен в ваш личный кабинет`);
+
+    // Также обновляем баланс Karma в ЛК
+    updateKarmaDisplay();
+}
+
+    // === Функция показа экранов === //
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+        const target = document.getElementById('screen' + id);
+        if (target) {
+            target.classList.add('active');
+        }
+    }
+
+// Данные о хранителях культуры
+const guardianData = {
+    petrova: {
+        title: "Мария Петрова",
+        content: "Сохраняет якутские предания и обучает молодёжь языку.\n\nОна записывает песни предков и учит детей петь их на старом языке."
+    },
+    bator: {
+        title: "Батор Цыренов",
+        content: "Шаман из Бурятии. Он проводит обряды и помогает людям через духов природы.\n\nЕго семья передаёт шаманское знание уже 5 поколений."
+    },
+    aysha: {
+        title: "Айша Ахматова",
+        content: "Рассказчица чеченских легенд. Её голос живёт в каждом слове.\n\nОна собирает и рассказывает истории дедушек и бабушек, чтобы они не были забыты."
+    },
+    ivan: {
+        title: "Иван Табаков",
+        content: "Удмуртский знаток ритуалов. Он проводит обряды и делится знаниями о верованиях народа.\n\nУ него в доме есть священный угол с символами защиты от сглаза."
+    }
+};
+
+// === Функция показа информации о хранителе === //
+function showGuardianInfo(guardian) {
+    const data = guardianData[guardian];
+    if (!data) {
+        console.error("Хранитель не найден:", guardian);
+        return;
+    }
+
+    document.getElementById("guardianTitle").textContent = data.title;
+    document.getElementById("guardianContent").innerHTML = data.content.replace(/\n/g, '<br>');
+    document.getElementById("guardianPopup").style.display = "flex";
+}
+
+// === Функция закрытия окна хранителя === //
+function closeGuardianPopup() {
+    const popup = document.getElementById("guardianPopup");
+    if (popup) {
+        popup.style.display = "none";
+    }
+}
+
+
+
+// Функция анимации печати текста при открытии экрана 7
+function typeText(elementId, text, speed = 50) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    let index = 0;
+    element.textContent = '';
+
+    function type() {
+        if (index < text.length) {
+            element.textContent += text.charAt(index);
+            index++;
+            setTimeout(type, speed);
+        } else {
+            // Убираем мигающий курсор после окончания печати
+            element.style.borderRight = 'none';
+        }
+    }
+
+    type();
+}
+ 
+
+// экран 7
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+    const target = document.getElementById('screen' + id);
+    if (target) {
+        target.classList.add('active');
+
+        // Если это экран 7 — запускаем музыку
+        if (id === 7) {
+            playHistoryMusic();
+        } else {
+            // На других экранах — останавливаем
+            stopHistoryMusic();
+        }
+
+        // Печать текста только на экране 7
+        if (id === 7) {
+            const historyText = "Идея CyberTravelRussia родилась давно. Мы хотели создать не просто платформу путешествий, а настоящий портал в культуру и историю народов нашей страны.\n\nСначала это были лишь мысли о том, как можно помочь людям глубже погрузиться в традиции русских, якутов, бурятов, чеченцев, удмуртов и многих других народов России.\n\nМы мечтали объединить технологии и культурное наследие. Появилась идея использовать VR-туры, интерактивные карты и выбор туров по регионам, где пользователь мог бы видеть не только маршруты, но и слышать голос предков, видеть обряды, учить языки и жить этносом.\n\nТеперь наша миссия — сделать Россию доступной, живой и близкой каждому.";
+            typeText('historyText', historyText, 30);
+        }
+    }
+}
+// Функция запуска музыки
+function playHistoryMusic() {
+    const audio = document.getElementById('historyAudio');
+    if (audio) {
+        audio.volume = 0.3;
+        audio.play().catch(err => {
+            console.warn("Автовоспроизведение заблокировано:", err);
+        });
+    }
+}
+
+// Функция остановки музыки
+function stopHistoryMusic() {
+    const audio = document.getElementById('historyAudio');
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0; // Сброс до начала
+    }
+}
+
+
+
+
+
+    function showApplicationForm() {
+        document.getElementById('tourList').style.display = 'none';
+        document.getElementById('applicationForm').style.display = 'block';
+    }
+
+
+    function submitApplication() {
+        const name = document.getElementById('appName').value.trim();
+        const email = document.getElementById('appEmail').value.trim();
+        const phone = document.getElementById('appPhone').value.trim();
+        const comment = document.getElementById('appComment') ? document.getElementById('appComment').value.trim() : '';
+        if (!name || !email || !phone) {
+            alert("Заполните обязательные поля");
+            return;
+        }
+        alert("Заявка отправлена!");
+    }
+
+    function bookTour(tourName) {
+        alert("Вы забронировали тур: " + tourName);
+    }
+
+    // Закрытие окон по Esc
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' || event.keyCode === 27) {
+            const form = document.getElementById('applicationForm');
+            const tours = document.getElementById('tourList');
+            if (form && form.style.display === 'block') form.style.display = 'none';
+            if (tours && tours.style.display === 'flex') tours.style.display = 'none';
+        }
+    });
+
+    // Клик вне формы закрывает её
+    document.addEventListener('click', function(event) {
+        const form = document.getElementById('applicationForm');
+        if (form && form.style.display === 'block' && !form.contains(event.target)) {
+            form.style.display = 'none';
+        }
+    });
+// Показывает список туров с анимацией появления
+
+function showTourList() {
+    const tourList = document.getElementById('tourList');
+    const applicationForm = document.getElementById('applicationForm');
+
+    if (tourList) {
+        tourList.style.display = 'flex';
+        tourList.querySelectorAll('[style]').forEach(card => {
+            card.classList.add('card');
+        });
+    }
+
+    if (applicationForm) applicationForm.style.display = 'none';
+}
+
+// Показывает форму заявки с анимацией
+function showApplicationForm() {
+    const applicationForm = document.getElementById('applicationForm');
+    if (applicationForm) {
+        applicationForm.style.display = 'block';
+        applicationForm.classList.add('card');
+    }
+
+    const tourList = document.getElementById('tourList');
+    if (tourList) {
+        tourList.style.display = 'none';
+    }
+}
+
+// Функция для открытия кастомного алерта
+function showCustomAlert(message) {
+    const alertBox = document.getElementById('customAlert');
+    const alertMessage = document.getElementById('customAlertMessage');
+    alertMessage.textContent = message;
+    alertBox.style.display = 'flex';
+}
+
+// Функция для закрытия кастомного алерта
+function closeCustomAlert() {
+    const alertBox = document.getElementById('customAlert');
+    alertBox.style.display = 'none';
+}
+
+if (target) {
+    target.classList.add('active');
+    target.style.border = '5px solid red'; // ← временная рамка для проверки
+}
+
+function sendMessage() {
+    alert("Сообщение отправлено!");
+}
+
+function selectRegion(region) {
+    alert("Вы выбрали регион: " + region);
+    // Здесь можно реализовать переход на страницу с турами конкретного региона
+    // Например:
+    // window.location.href = 'tours-' + region + '.html';
+}
+
+// === Функция запуска VR-экскурсии ===
+function startVRExperience(region) {
+    alert("Вы выбрали VR-экскурсию по региону: " + region);
+    // Здесь можно запустить VR-панораму или переход на экран региона
+}
+
+// === Кнопка "Начать VR-экскурсию" ===
+function launchVR() {
+    alert("Запуск VR-экскурсии...");
+    // Можно загрузить VR-панораму или перейти на экран с 360° просмотром
+}
+
+function showEventDetails(eventId) {
+    let message = '';
+
+    switch (eventId) {
+        case 'ysyakh':
+            message = 'Ысыах — якутский праздник лета. Танцы, песни, лошади, традиционная одежда и вкуснейшие якутские напитки.';
+            break;
+        case 'udmurt-wedding':
+            message = 'Удмуртская свадьба — красочное событие с ритуалами, обрядами и национальной музыкой.';
+            break;
+        case 'caucasus-wedding':
+            message = 'Кавказская свадьба — громкая, щедрая и полная тостов и доброжелательности.';
+            break;
+        case 'surkharban':
+            message = 'Сурхарбан — бурятский день поминовения предков с конными играми и джигитовкой.';
+            break;
+        case 'yakut-new-year':
+            message = 'Ыабылан — якутский Новый год. Обряды, игры, масленичные куклы и ритуалы удачи.';
+            break;
+        default:
+            message = 'Детали мероприятия скоро будут доступны.';
+    }
+
+    if (message) {
+        showCustomAlert(message);
+    }
+}
+// === Функция взятия квеста === //
+function takeQuest() {
+    if (!currentQuest) return;
+
+    let user = JSON.parse(localStorage.getItem("user")) || {};
+    if (!user.quests) user.quests = [];
+
+    if (!user.quests.some(q => q.name === currentQuest)) {
+        user.quests.push({
+            name: currentQuest,
+            progress: [],
+            completed: false
+        });
+        localStorage.setItem("user", JSON.stringify(user));
+        alert("Квест добавлен в ваш личный кабинет!");
+    } else {
+        alert("Этот квест уже взят");
+    }
+}
+// === Завершение квеста === //
+function completeQuest() {
+    if (!currentQuest) return;
+
+    let user = JSON.parse(localStorage.getItem("user")) || {};
+    const quest = user.quests.find(q => q.name === currentQuest);
+
+    if (!quest) return;
+
+    const totalTasks = questData[currentQuest].tasks.length;
+    if (quest.progress.length === totalTasks && !quest.completed) {
+        quest.completed = true;
+        user.karma = (user.karma || 0) + questData[currentQuest].karmaReward;
+        localStorage.setItem("user", JSON.stringify(user));
+        alert("Квест завершён! Вы получили " + questData[currentQuest].karmaReward + " Karma");
+        closeQuestPopup();
+    } else {
+        alert("Вы не выполнили все задачи!");
+    }
+}
+
+// === Обновление выполненных задач === //
+function updateTask(questName, taskIndex, isChecked) {
+    let user = JSON.parse(localStorage.getItem("user")) || {};
+    const quest = user.quests.find(q => q.name === questName);
+    if (!quest) return;
+
+    if (isChecked && !quest.progress.includes(taskIndex)) {
+        quest.progress.push(taskIndex);
+    } else if (!isChecked && quest.progress.includes(taskIndex)) {
+        quest.progress = quest.progress.filter(i => i !== taskIndex);
+    }
+
+    localStorage.setItem("user", JSON.stringify(user));
+    renderUserQuests();
+}
+
+// === Отображение квестов в ЛК === //
+function renderUserQuests() {
+    const container = document.getElementById("userQuestsList");
+    container.innerHTML = "";
+    const user = JSON.parse(localStorage.getItem("user")) || { quests: [], karma: 0 };
+
+    if (user.quests && user.quests.length > 0) {
+        user.quests.forEach(quest => {
+            const div = document.createElement("div");
+            div.style.marginTop = "2vw";
+            div.style.padding = "2vw";
+            div.style.background = "rgba(0, 0, 0, 0.5)";
+            div.style.borderRadius = "8px";
+
+            div.innerHTML = `
+                <h4 style="color: #00f2ff;">${quest.name}</h4>
+                <ul style="text-align: left; margin-top: 1vw;">
+                    ${quest.tasks.map((task, idx) => {
+                        return `<li><input type="checkbox" ${quest.progress.includes(idx) ? 'checked' : ''} onchange="updateTask('${quest.name}', ${idx}, this.checked)" /> ${task}</li>`;
+                    }).join("")}
+                </ul>
+                ${quest.completed ? `<p style="color: green;">Завершён ✅</p>` : ''}
+            `;
+
+            container.appendChild(div);
+        });
+    } else {
+        container.innerHTML = "<p>Нет активных квестов</p>";
+    }
+
+    // Обновляем Karma
+    document.getElementById("karmaCount").textContent = "Karma: " + (user.karma || 0);
+}
+
+</script>
+
+</body>
+</html>
