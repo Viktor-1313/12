@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бронирование туров - CyberTravelRussia</title>
+    <style>
+        /* Основные стили */
+        body {
+            margin: 0;
+            background-color: #0d0d0d;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .screen {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 100px;
+            height: 100px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .button {
+            border: none;
+            background: linear-gradient(45deg, #00f2ff, #0066ff);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+            background: linear-gradient(45deg, #00ccff, #0044ff);
+        }
+
+        /* Специфичные стили для экрана бронирования */
+        .tour-container {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            margin: 100px auto 50px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+        }
+
+        .search-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .search-filters input, 
+        .search-filters select {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #00f2ff;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .tour-list {
+            display: none;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            padding: 30px 0;
+        }
+
+        .tour-card {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 12px;
+            width: 300px;
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .tour-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 242, 255, 0.4);
+        }
+
+        .application-form {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 12px;
+            z-index: 1000;
+        }
+
+        .application-form input,
+        .application-form textarea {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #00f2ff;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+        }
+
+        .nav-buttons {
+            position: fixed;
+            bottom: 50px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Экран 5: Бронирование туров -->
+    <div id="screen5" class="screen">
+        <div class="logo" onclick="showScreen(1)">CyberTravelRussia</div>
+        
+        <div class="tour-container">
+            <h2 style="text-align: center; color: #00f2ff; margin-bottom: 30px;">Бронирование туров</h2>
+            
+            <div class="search-filters">
+                <input type="text" placeholder="Поиск по названию...">
+                <select>
+                    <option value="">Любая локация</option>
+                    <option value="moscow">Москва</option>
+                    <option value="spb">Санкт-Петербург</option>
+                    <option value="ural">Урал</option>
+                    <option value="siberia">Сибирь</option>
+                </select>
+                <select>
+                    <option value="">Любая длительность</option>
+                    <option value="short">До 3 дней</option>
+                    <option value="medium">3-7 дней</option>
+                    <option value="long">Больше недели</option>
+                </select>
+                <select>
+                    <option value="">Любая стоимость</option>
+                    <option value="low">До 10 000 ₽</option>
+                    <option value="mid">10 000 - 50 000 ₽</option>
+                    <option value="high">Более 50 000 ₽</option>
+                </select>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="button" onclick="showTourList()">Выбрать и забронировать</button>
+                <button class="button" style="background: linear-gradient(90deg, #ff9900, #ff6600);" 
+                        onclick="showApplicationForm()">Оставить заявку на тур</button>
+            </div>
+            
+            <!-- Список туров -->
+            <div id="tourList" class="tour-list">
+                <!-- Тур 1 -->
+                <div class="tour-card fade-in">
+                    <h3 style="color: #00f2ff;">Тур по Москве</h3>
+                    <p style="color: #ccc;">Изучите исторические места столицы за 5 дней</p>
+                    <div style="margin: 15px 0;">
+                        <span style="color: #00f2ff;">★ ★ ★ ★ ☆</span>
+                        <span style="color: white; margin-left: 10px;">4.2 (15 отзывов)</span>
+                    </div>
+                    <p style="color: white;"><strong>Стоимость:</strong> 25 000 ₽</p>
+                    <button class="button" style="width: 100%; margin-top: 15px;" 
+                            onclick="bookTour('Тур по Москве')">Забронировать</button>
+                </div>
+                
+                <!-- Тур 2 -->
+                <div class="tour-card fade-in">
+                    <h3 style="color: #00f2ff;">Путешествие в Сибирь</h3>
+                    <p style="color: #ccc;">Приключение в дикой природе и национальные традиции</p>
+                    <div style="margin: 15px 0;">
+                        <span style="color: #00f2ff;">★ ★ ★ ★ ★</span>
+                        <span style="color: white; margin-left: 10px;">4.8 (23 отзыва)</span>
+                    </div>
+                    <p style="color: white;"><strong>Стоимость:</strong> 60 000 ₽</p>
+                    <button class="button" style="width: 100%; margin-top: 15px;" 
+                            onclick="bookTour('Путешествие в Сибирь')">Забронировать</button>
+                </div>
+                
+                <!-- Тур 3 -->
+                <div class="tour-card fade-in">
+                    <h3 style="color: #00f2ff;">Золотое кольцо России</h3>
+                    <p style="color: #ccc;">7-дневный тур по древним городам России</p>
+                    <div style="margin: 15px 0;">
+                        <span style="color: #00f2ff;">★ ★ ★ ★ ☆</span>
+                        <span style="color: white; margin-left: 10px;">4.5 (32 отзыва)</span>
+                    </div>
+                    <p style="color: white;"><strong>Стоимость:</strong> 35 000 ₽</p>
+                    <button class="button" style="width: 100%; margin-top: 15px;" 
+                            onclick="bookTour('Золотое кольцо России')">Забронировать</button>
+                </div>
+            </div>
+            
+            <!-- Форма заявки -->
+            <div id="applicationForm" class="application-form">
+                <h3 style="color: #00f2ff; text-align: center; margin-bottom: 30px;">Оставить заявку на тур</h3>
+                
+                <input type="text" id="appName" placeholder="Ваше имя">
+                <input type="email" id="appEmail" placeholder="Email">
+                <input type="tel" id="appPhone" placeholder="Телефон">
+                <textarea id="appComment" rows="4" placeholder="Комментарий (желаемые даты, особые пожелания)"></textarea>
+                
+                <button class="button" style="width: 100%; background: linear-gradient(90deg, #ff9900, #ff6600);" 
+                        onclick="submitApplication()">Отправить заявку</button>
+            </div>
+        </div>
+        
+        <!-- Нижние кнопки навигации -->
+        <div class="nav-buttons">
+            <button class="button" onclick="showScreen(1)">На главную</button>
+            <button class="button" style="background: linear-gradient(90deg, #ff9900, #ff6600);" 
+                    onclick="showScreen(4)">Обмен Karma</button>
+        </div>
+    </div>
+
+    <script>
+        // Функции для работы экрана бронирования
+        function showTourList() {
+            document.getElementById('tourList').style.display = 'flex';
+            document.getElementById('applicationForm').style.display = 'none';
+            // Прокрутка к списку туров
+            document.getElementById('tourList').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showApplicationForm() {
+            document.getElementById('applicationForm').style.display = 'block';
+            document.getElementById('tourList').style.display = 'none';
+        }
+        
+        function bookTour(tourName) {
+            alert('Вы выбрали тур: ' + tourName + '\nПеренаправляем на страницу оплаты...');
+            // Здесь можно добавить логику бронирования
+        }
+        
+        function submitApplication() {
+            const name = document.getElementById('appName').value;
+            const email = document.getElementById('appEmail').value;
+            const phone = document.getElementById('appPhone').value;
+            
+            if (name && email && phone) {
+                alert('Спасибо, ' + name + '! Ваша заявка принята.\nМы свяжемся с вами в ближайшее время.');
+                document.getElementById('appName').value = '';
+                document.getElementById('appEmail').value = '';
+                document.getElementById('appPhone').value = '';
+                document.getElementById('appComment').value = '';
+                document.getElementById('applicationForm').style.display = 'none';
+            } else {
+                alert('Пожалуйста, заполните все обязательные поля!');
+            }
+        }
+        
+        // Функция переключения экранов (упрощенная версия)
+        function showScreen(id) {
+            alert('Переход на экран ' + id);
+            // В реальном проекте здесь была бы логика переключения между экранами
+        }
+        
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            // Добавляем анимацию для карточек
+            const cards = document.querySelectorAll('.tour-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+</html>ц
